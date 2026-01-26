@@ -1,4 +1,4 @@
-import { SITE_NAME } from "../lib/consts";
+import { SITE_NAME } from "../../lib/consts";
 
 export default function Header() {
   return (
