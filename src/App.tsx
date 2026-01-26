@@ -1,10 +1,11 @@
-import Header from "./components/Header";
+import Header from "./components/Navigation/Header";
+import ExpCalculator from "./components/Calculator/ExpCalculator";
 
 function App() {
   return (
     <div className="bg-linear-to-br from-blue-500 to-purple-600 relative">
       <Header />
-      <h1 className="text-3xl hover:text-green-300">owo</h1>
+      <ExpCalculator />
     </div>
   );
 }
