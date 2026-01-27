@@ -1,0 +1,51 @@
+{
+  "common": {
+    "siteName": "刀剑乱舞经验值计算器",
+    "calculate": "计算",
+    "loading": "正在加载经验值数据...",
+    "selectType": "选择类型..."
+  },
+  "calculator": {
+    "title": "经验值计算器",
+    "currentState": "当前状态",
+    "targetState": "目标状态",
+    "calculationResults": "计算结果",
+    "state": "状态",
+    "type": "类型",
+    "level": "等级"
+  },
+  "states": {
+    "toku": "特",
+    "kiwame": "極"
+  },
+  "types": {
+    "tantou": "短刀",
+    "wakizashi": "脇差",
+    "uchigatana_R3": "三花打刀",
+    "uchigatana_R4": "四花打刀",
+    "tachi": "太刀",
+    "ootachi": "大太刀",
+    "yari": "槍",
+    "naginata": "薙刀"
+  },
+  "errors": {
+    "expDataNotLoaded": "经验值数据未加载",
+    "selectTypeCurrentKiwame": "请为当前極状态选择类型",
+    "selectTypeTargetKiwame": "请为目标極状态选择类型",
+    "currentLevelRange": "当前等级必须在 1 到 {{max}} 之间",
+    "targetLevelRange": "目标等级必须在 1 到 {{max}} 之间",
+    "cannotDowngrade": "无法从極计算到特（无法降级）",
+    "kiwameTypeMustMatch": "当前和目标状态的極类型必须相同",
+    "failedToLoadExpData": "加载经验值数据失败",
+    "calculationFailed": "计算失败"
+  },
+  "results": {
+    "expNeededDelta": "所需经验值（差值）：",
+    "requiredStoredCumulative": "所需累积经验值（修行前）："
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}

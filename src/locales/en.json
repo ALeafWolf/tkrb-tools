@@ -1,0 +1,51 @@
+{
+  "common": {
+    "siteName": "Touken Ranbu Exp Calculator",
+    "calculate": "Calculate",
+    "loading": "Loading exp data...",
+    "selectType": "Select type..."
+  },
+  "calculator": {
+    "title": "EXP Calculator",
+    "currentState": "Current State",
+    "targetState": "Target State",
+    "calculationResults": "Calculation Results",
+    "state": "State",
+    "type": "Type",
+    "level": "Level"
+  },
+  "states": {
+    "toku": "Toku",
+    "kiwame": "Kiwame"
+  },
+  "types": {
+    "tantou": "Tantou",
+    "wakizashi": "Wakizashi",
+    "uchigatana_R3": "Uchigatana R3",
+    "uchigatana_R4": "Uchigatana R4",
+    "tachi": "Tachi",
+    "ootachi": "Ootachi",
+    "yari": "Yari",
+    "naginata": "Naginata"
+  },
+  "errors": {
+    "expDataNotLoaded": "Exp data not loaded",
+    "selectTypeCurrentKiwame": "Please select a type for current kiwame state",
+    "selectTypeTargetKiwame": "Please select a type for target kiwame state",
+    "currentLevelRange": "Current level must be between 1 and {{max}}",
+    "targetLevelRange": "Target level must be between 1 and {{max}}",
+    "cannotDowngrade": "Cannot calculate from kiwame to toku (downgrade not possible)",
+    "kiwameTypeMustMatch": "Kiwame type must be the same for current and target state",
+    "failedToLoadExpData": "Failed to load exp data",
+    "calculationFailed": "Calculation failed"
+  },
+  "results": {
+    "expNeededDelta": "EXP needed (delta):",
+    "requiredStoredCumulative": "Required stored cumulative EXP (before training):"
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}

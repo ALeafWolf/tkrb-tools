@@ -1,0 +1,51 @@
+{
+  "common": {
+    "siteName": "刀剣乱舞経験値計算機",
+    "calculate": "計算",
+    "loading": "経験値データを読み込み中...",
+    "selectType": "タイプを選択..."
+  },
+  "calculator": {
+    "title": "経験値計算機",
+    "currentState": "現在の状態",
+    "targetState": "目標の状態",
+    "calculationResults": "計算結果",
+    "state": "状態",
+    "type": "タイプ",
+    "level": "レベル"
+  },
+  "states": {
+    "toku": "特",
+    "kiwame": "極"
+  },
+  "types": {
+    "tantou": "短刀",
+    "wakizashi": "脇差",
+    "uchigatana_R3": "レア3打刀",
+    "uchigatana_R4": "レア4打刀",
+    "tachi": "太刀",
+    "ootachi": "大太刀",
+    "yari": "槍",
+    "naginata": "薙刀"
+  },
+  "errors": {
+    "expDataNotLoaded": "経験値データが読み込まれていません",
+    "selectTypeCurrentKiwame": "現在の極状態のタイプを選択してください",
+    "selectTypeTargetKiwame": "目標の極状態のタイプを選択してください",
+    "currentLevelRange": "現在のレベルは 1 から {{max}} の間である必要があります",
+    "targetLevelRange": "目標のレベルは 1 から {{max}} の間である必要があります",
+    "cannotDowngrade": "極から特への計算はできません（ダウングレードは不可能）",
+    "kiwameTypeMustMatch": "現在と目標の状態の極タイプは同じである必要があります",
+    "failedToLoadExpData": "経験値データの読み込みに失敗しました",
+    "calculationFailed": "計算に失敗しました"
+  },
+  "results": {
+    "expNeededDelta": "必要な経験値（差分）：",
+    "requiredStoredCumulative": "必要な累積経験値（修行前）："
+  },
+  "language": {
+    "zh": "中文",
+    "en": "English",
+    "ja": "日本語"
+  }
+}
