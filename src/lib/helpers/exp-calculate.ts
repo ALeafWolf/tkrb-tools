@@ -6,7 +6,9 @@ function assertLevelInRange(level: number, min: number, max: number) {
   }
 }
 
-function assertKiwameType(type: ToukenType | undefined): asserts type is ToukenType {
+function assertKiwameType(
+  type: ToukenType | undefined,
+): asserts type is ToukenType {
   if (!type) throw new Error("kiwameType is required for stage=kiwame");
 }
 
@@ -14,7 +16,7 @@ export function getCumExpToLevel(
   data: ExpData,
   toukenState: ToukenState,
   level: number,
-  kiwameType?: ToukenType
+  kiwameType?: ToukenType,
 ): number {
   if (toukenState === "toku") {
     assertLevelInRange(level, 1, data.base.maxLevel);
@@ -46,7 +48,7 @@ export function getExpBetweenLevels(
   toukenState: ToukenState,
   currentLevel: number,
   targetLevel: number,
-  kiwameType?: ToukenType
+  kiwameType?: ToukenType,
 ): number {
   if (targetLevel < currentLevel) return 0;
 
@@ -59,7 +61,7 @@ export function getExpToTargetLevel(
   data: ExpData,
   toukenState: ToukenState,
   targetLevel: number,
-  kiwameType?: ToukenType
+  kiwameType?: ToukenType,
 ): number {
   return getCumExpToLevel(data, toukenState, targetLevel, kiwameType);
 }

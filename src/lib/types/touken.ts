@@ -97,5 +97,4 @@ type KiwameVariant = {
   cumExpAt100: number;
 };
 
-
 export type { ToukenState, ToukenType, ExpData, KiwameVariant };
