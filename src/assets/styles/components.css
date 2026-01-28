@@ -1,0 +1,5 @@
+@layer components {
+  .bg-primary-surface {
+    @apply bg-primary-surface;
+  }
+}

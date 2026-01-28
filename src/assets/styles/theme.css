@@ -1,0 +1,23 @@
+/* Theme tokens (Tailwind v4 will generate utilities like bg-primary, text-fg, etc.) */
+@theme {
+  /* Surfaces */
+  --color-primary-surface: #f8f5e6;
+  --color-panel: #eeeee8;
+  --color-container: #fbfaf5;
+
+  /* Text */
+  --color-fg: #2b2b2b;
+  --color-muted: #6b6b6b;
+  --color-inverse: #ffffff;
+
+  /* Button */
+  --color-btn-black: #2b2b2b;
+  --color-btn-black-corner: #757575;
+  --color-btn-green: #207319;
+  --color-btn-green-corner: #52854d;
+  --color-btn-cyan: #17a9b6;
+  --color-btn-cyan-corner: #68c6ce;
+
+  /* Border radius */
+  --radius-ui: 6px;
+}
