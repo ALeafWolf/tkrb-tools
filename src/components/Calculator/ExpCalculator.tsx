@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToukenState, ToukenType, ExpData } from "../../lib/types/touken";
-import { getExpBetweenLevels, getCumExpToLevel } from "../../lib/helpers/exp-calculate";
+import {
+  getExpBetweenLevels,
+  getCumExpToLevel,
+} from "../../lib/helpers/exp-calculate";
+import { Button } from "../Shared/Button";
+import { ContentContainer } from "../Shared/ContentContainer";
 
 const TOUKEN_TYPES: ToukenType[] = [
   "tantou",
@@ -51,7 +56,7 @@ export default function ExpCalculator() {
         setExpData(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : t("errors.failedToLoadExpData")
+          err instanceof Error ? err.message : t("errors.failedToLoadExpData"),
         );
       } finally {
         setLoading(false);
@@ -140,7 +145,7 @@ export default function ExpCalculator() {
             expData,
             "toku",
             currentLevel,
-            targetLevel
+            targetLevel,
           );
         } else {
           // kiwame to kiwame (types should match, use currentType)
@@ -149,7 +154,7 @@ export default function ExpCalculator() {
             "kiwame",
             currentLevel,
             targetLevel,
-            currentType || undefined
+            currentType || undefined,
           );
         }
       } else {
@@ -160,11 +165,16 @@ export default function ExpCalculator() {
           expData,
           "kiwame",
           targetLevel,
-          targetType || undefined
+          targetType || undefined,
         );
 
-        const trainingUnlockLevel = expData.kiwame.variants[targetType!].trainingUnlockBaseLevel;
-        const trainingUnlockLevelExp = getCumExpToLevel(expData, "toku", trainingUnlockLevel);
+        const trainingUnlockLevel =
+          expData.kiwame.variants[targetType!].trainingUnlockBaseLevel;
+        const trainingUnlockLevelExp = getCumExpToLevel(
+          expData,
+          "toku",
+          trainingUnlockLevel,
+        );
         value = trainingUnlockLevelExp + expFromKiwameLv1ToTarget;
         kind = "requiredStoredCumulative";
       }
@@ -172,29 +182,28 @@ export default function ExpCalculator() {
       setResult({ value, kind });
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : t("errors.calculationFailed")
+        err instanceof Error ? err.message : t("errors.calculationFailed"),
       );
       setResult(null);
     }
   }
 
-  const isCalculateDisabled =
-    loading || !expData || validateInputs() !== null;
+  const isCalculateDisabled = loading || !expData || validateInputs() !== null;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <h2 className="text-3xl font-bold text-center mb-8">
+    <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <h2 className="mb-8 text-center text-3xl font-bold">
         {t("calculator.title")}
       </h2>
 
       {loading && (
-        <div className="text-center py-8 text-gray-600">
+        <div className="py-8 text-center text-gray-600">
           {t("common.loading")}
         </div>
       )}
 
       {error && !loading && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+        <div className="rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
           {error}
         </div>
       )}
@@ -202,14 +211,14 @@ export default function ExpCalculator() {
       {!loading && expData && (
         <div className="grid grid-cols-2 gap-4">
           {/* Current State Section */}
-          <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-            <h3 className="text-xl font-semibold mb-4">
+          <ContentContainer className="space-y-4">
+            <h3 className="mb-4 text-xl font-semibold">
               {t("calculator.currentState")}
             </h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   {t("calculator.state")}
                 </label>
                 <div className="flex gap-4">
@@ -242,7 +251,7 @@ export default function ExpCalculator() {
 
               {currentState === "kiwame" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     {t("calculator.type")}
                   </label>
                   <select
@@ -250,7 +259,7 @@ export default function ExpCalculator() {
                     onChange={(e) =>
                       setCurrentType(e.target.value as ToukenType)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="">{t("common.selectType")}</option>
                     {TOUKEN_TYPES.map((type) => (
@@ -263,8 +272,9 @@ export default function ExpCalculator() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("calculator.level")} (1-{currentState === "toku" ? 99 : 199})
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  {t("calculator.level")} (1-
+                  {currentState === "toku" ? 99 : 199})
                 </label>
                 <input
                   type="number"
@@ -274,21 +284,21 @@ export default function ExpCalculator() {
                   onChange={(e) =>
                     setCurrentLevel(parseInt(e.target.value) || 1)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
-          </div>
+          </ContentContainer>
 
           {/* Target State Section */}
-          <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
-            <h3 className="text-xl font-semibold mb-4">
+          <ContentContainer className="space-y-4">
+            <h3 className="mb-4 text-xl font-semibold">
               {t("calculator.targetState")}
             </h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   {t("calculator.state")}
                 </label>
                 <div className="flex gap-4">
@@ -321,7 +331,7 @@ export default function ExpCalculator() {
 
               {targetState === "kiwame" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
                     {t("calculator.type")}
                   </label>
                   <select
@@ -329,7 +339,7 @@ export default function ExpCalculator() {
                     onChange={(e) =>
                       setTargetType(e.target.value as ToukenType)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
                     <option value="">{t("common.selectType")}</option>
                     {TOUKEN_TYPES.map((type) => (
@@ -342,8 +352,9 @@ export default function ExpCalculator() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t("calculator.level")} (1-{targetState === "toku" ? 99 : 199})
+                <label className="mb-2 block text-sm font-medium text-gray-700">
+                  {t("calculator.level")} (1-{targetState === "toku" ? 99 : 199}
+                  )
                 </label>
                 <input
                   type="number"
@@ -353,30 +364,26 @@ export default function ExpCalculator() {
                   onChange={(e) =>
                     setTargetLevel(parseInt(e.target.value) || 1)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
-          </div>
+          </ContentContainer>
 
           {/* Calculate Button */}
-          <div className="flex justify-center col-span-2">
-            <button
+          <div className="col-span-2 flex justify-center">
+            <Button
               onClick={handleCalculate}
               disabled={isCalculateDisabled}
-              className={`px-8 py-3 rounded-lg font-semibold text-white transition-colors ${
-                isCalculateDisabled
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
-              }`}
+              className={`px-8 py-3 ${isCalculateDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
             >
               {t("common.calculate")}
-            </button>
+            </Button>
           </div>
 
           {/* Results Section */}
           {result && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-6 space-y-4 col-span-2">
+            <div className="col-span-2 space-y-4 rounded-lg border border-green-200 bg-green-50 p-6">
               <h3 className="text-xl font-semibold text-green-800">
                 {t("calculator.calculationResults")}
               </h3>
