@@ -3,7 +3,8 @@
     "siteName": "刀剣乱舞のガジェット",
     "calculate": "計算",
     "loading": "経験値データを読み込み中...",
-    "selectType": "タイプを選択..."
+    "selectType": "タイプを選択...",
+    "language": "言語"
   },
   "calculator": {
     "title": "経験値計算機",

@@ -7,9 +7,9 @@ export default function Header() {
   return (
     <header className="bg-panel sticky top-0 left-0 z-50 shadow-lg">
       <div className="flex items-center justify-between p-4">
-        <h1 className="text-lg md:text-xl lg:text-2xl">
+        <p className="text-sm">
           {t("common.siteName")}
-        </h1>
+        </p>
         <LanguageSwitcher />
       </div>
     </header>

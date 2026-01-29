@@ -4,9 +4,10 @@ import type { ToukenState, ToukenType, ExpData } from "../../lib/types/touken";
 import {
   getExpBetweenLevels,
   getCumExpToLevel,
-} from "../../lib/helpers/exp-calculate";
+} from "../../lib/helpers";
 import { Button } from "../Shared/Button";
 import { ContentContainer } from "../Shared/ContentContainer";
+import { Select } from "../Shared/Select";
 
 const TOUKEN_TYPES: ToukenType[] = [
   "tantou",
@@ -18,13 +19,13 @@ const TOUKEN_TYPES: ToukenType[] = [
   "yari",
   "naginata",
 ];
-
-function formatNumber(num: number): string {
-  return num.toLocaleString("en-US");
-}
-
 export default function ExpCalculator() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const formatNumber = (num: number): string => {
+    return new Intl.NumberFormat(i18n.language).format(num);
+  };
+
   const [expData, setExpData] = useState<ExpData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -250,25 +251,22 @@ export default function ExpCalculator() {
               </div>
 
               {currentState === "kiwame" && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    {t("calculator.type")}
-                  </label>
-                  <select
-                    value={currentType || ""}
-                    onChange={(e) =>
-                      setCurrentType(e.target.value as ToukenType)
-                    }
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">{t("common.selectType")}</option>
-                    {TOUKEN_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t(`types.${type}`)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label={t("calculator.type")}
+                  value={currentType || ""}
+                  options={[
+                    { value: "", label: t("common.selectType") },
+                    ...TOUKEN_TYPES.map((type) => ({
+                      value: type,
+                      label: t(`types.${type}`),
+                    })),
+                  ]}
+                  onChange={(value) =>
+                    setCurrentType(value === "" ? null : (value as ToukenType))
+                  }
+                  placeholder={t("common.selectType")}
+                  className="w-full"
+                />
               )}
 
               <div>
@@ -284,7 +282,7 @@ export default function ExpCalculator() {
                   onChange={(e) =>
                     setCurrentLevel(parseInt(e.target.value) || 1)
                   }
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full border border-black px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
@@ -330,25 +328,22 @@ export default function ExpCalculator() {
               </div>
 
               {targetState === "kiwame" && (
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-gray-700">
-                    {t("calculator.type")}
-                  </label>
-                  <select
-                    value={targetType || ""}
-                    onChange={(e) =>
-                      setTargetType(e.target.value as ToukenType)
-                    }
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">{t("common.selectType")}</option>
-                    {TOUKEN_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {t(`types.${type}`)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label={t("calculator.type")}
+                  value={targetType || ""}
+                  options={[
+                    { value: "", label: t("common.selectType") },
+                    ...TOUKEN_TYPES.map((type) => ({
+                      value: type,
+                      label: t(`types.${type}`),
+                    })),
+                  ]}
+                  onChange={(value) =>
+                    setTargetType(value === "" ? null : (value as ToukenType))
+                  }
+                  placeholder={t("common.selectType")}
+                  className="w-full"
+                />
               )}
 
               <div>
@@ -364,44 +359,46 @@ export default function ExpCalculator() {
                   onChange={(e) =>
                     setTargetLevel(parseInt(e.target.value) || 1)
                   }
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full border border-black px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
             </div>
           </ContentContainer>
 
           {/* Calculate Button */}
-          <div className="col-span-2 flex justify-center">
+          <div className="col-span-2 flex rounded-lg gap-4">
+            <ContentContainer className="col-span-2 rounded-lg border flex-1">
+              {result && (
+                <>
+                  <h3 className="text-xl font-semibold">
+                    {t("calculator.calculationResults")}
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <span className="font-medium">
+                        {result.kind === "requiredStoredCumulative"
+                          ? t("results.requiredStoredCumulative")
+                          : t("results.expNeededDelta")}
+                      </span>{" "}
+                      <span className="text-2xl font-bold">
+                        {formatNumber(result.value)}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
+            </ContentContainer>
             <Button
               onClick={handleCalculate}
               disabled={isCalculateDisabled}
-              className={`px-8 py-3 ${isCalculateDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+              className={`px-8 py-3 ml-auto bg-danger ${isCalculateDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+              cornerClassName="border-b-danger-accent"
             >
               {t("common.calculate")}
             </Button>
           </div>
 
-          {/* Results Section */}
-          {result && (
-            <div className="col-span-2 space-y-4 rounded-lg border border-green-200 bg-green-50 p-6">
-              <h3 className="text-xl font-semibold text-green-800">
-                {t("calculator.calculationResults")}
-              </h3>
-
-              <div className="space-y-3">
-                <div>
-                  <span className="font-medium text-gray-700">
-                    {result.kind === "requiredStoredCumulative"
-                      ? t("results.requiredStoredCumulative")
-                      : t("results.expNeededDelta")}
-                  </span>{" "}
-                  <span className="text-2xl font-bold text-green-700">
-                    {formatNumber(result.value)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       )}
     </div>

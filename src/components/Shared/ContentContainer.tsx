@@ -1,4 +1,5 @@
 import React from "react";
+import { cn } from "../../lib/helpers";
 
 type ContentContainerProps = {
     children: React.ReactNode;
@@ -6,5 +7,5 @@ type ContentContainerProps = {
 };
 
 export function ContentContainer({ children, className }: ContentContainerProps) {
-    return <div className={`bg-container shadow-md p-6 border-black border ${className}`}>{children}</div>;
+    return <div className={cn(`bg-container shadow-md p-6 border-black border ${className}`)}>{children}</div>;
 }
