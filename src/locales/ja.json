@@ -4,7 +4,8 @@
     "calculate": "計算",
     "loading": "経験値データを読み込み中...",
     "selectType": "タイプを選択...",
-    "language": "言語"
+    "language": "言語",
+    "reset": "リセット"
   },
   "calculator": {
     "title": "経験値計算機",

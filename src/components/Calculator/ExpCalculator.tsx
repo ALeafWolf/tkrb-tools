@@ -275,6 +275,18 @@ export default function ExpCalculator() {
     }
   }
 
+  function handleReset() {
+    setCurrentState("toku");
+    setCurrentType(null);
+    setCurrentLevel(1);
+    setTargetState("kiwame");
+    setTargetType(null);
+    setTargetLevel(1);
+    setResult(null);
+    setValidationErrors({});
+    setError(null);
+  }
+
   // Memoize options arrays to prevent recreation on every render
   // Only include placeholder option when no type is selected
   const currentTypeOptions = useMemo(
@@ -360,7 +372,7 @@ export default function ExpCalculator() {
       )}
 
       {error && !loading && (
-        <div className="rounded border border-red-400 bg-red-100 px-4 py-3 text-red-700">
+        <div className="px-4 py-3 text-red-700">
           {error}
         </div>
       )}
@@ -420,11 +432,10 @@ export default function ExpCalculator() {
                     max={currentState === "toku" ? 99 : 199}
                     value={currentLevel}
                     onChange={createLevelChangeHandler(setCurrentLevel)}
-                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                      validationErrors.currentLevel
+                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${validationErrors.currentLevel
                         ? "border-red-500"
                         : "border-black"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -482,11 +493,10 @@ export default function ExpCalculator() {
                     max={targetState === "toku" ? 99 : 199}
                     value={targetLevel}
                     onChange={createLevelChangeHandler(setTargetLevel)}
-                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                      validationErrors.targetLevel
+                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${validationErrors.targetLevel
                         ? "border-red-500"
                         : "border-black"
-                    }`}
+                      }`}
                   />
                 </div>
               </div>
@@ -529,14 +539,23 @@ export default function ExpCalculator() {
                 </>
               ) : null}
             </ContentContainer>
-            <Button
-              onClick={handleCalculate}
-              disabled={isCalculateDisabled}
-              className={`px-8 py-3 ml-auto bg-danger ${isCalculateDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-              cornerClassName="border-b-danger-accent"
-            >
-              {t("common.calculate")}
-            </Button>
+            <div className="grid gap-2 ml-auto w-26">
+              <Button
+                onClick={handleReset}
+                className="bg-info"
+                cornerClassName="border-b-info-accent"
+              >
+                {t("common.reset")}
+              </Button>
+              <Button
+                onClick={handleCalculate}
+                disabled={isCalculateDisabled}
+                className={`bg-danger ${isCalculateDisabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                cornerClassName="border-b-danger-accent"
+              >
+                {t("common.calculate")}
+              </Button>
+            </div>
           </div>
 
         </div>

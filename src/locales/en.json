@@ -4,7 +4,8 @@
     "calculate": "Calculate",
     "loading": "Loading exp data...",
     "selectType": "Select type...",
-    "language": "Language"
+    "language": "Language",
+    "reset": "Reset"
   },
   "calculator": {
     "title": "EXP Calculator",

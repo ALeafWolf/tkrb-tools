@@ -181,9 +181,9 @@ export function Select({
                                 aria-selected={isSelected}
                                 className={cn(
                                     "px-3 py-2 select-none cursor-pointer border border-black not-last:border-b-0 relative",
-                                    !isPlaceholder && "hover:bg-danger-soft hover:after:content-['✓']",
+                                    !isPlaceholder && "hover:bg-danger-soft",
                                     "after:absolute after:right-2 after:top-1/2 after:-translate-y-1/2 after:text-danger after:font-semibold",
-                                    isActive && !isPlaceholder && "bg-danger-soft after:content-['✓']",
+                                    isActive && !isPlaceholder && "bg-danger-soft",
                                     isSelected && !isPlaceholder && "bg-danger-soft after:content-['✓']",
                                 )}
                                 onMouseEnter={() => setActiveIndex(idx)}

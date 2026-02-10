@@ -4,7 +4,8 @@
     "calculate": "计算",
     "loading": "正在加载经验值数据...",
     "selectType": "选择类型...",
-    "language": "语言"
+    "language": "语言",
+    "reset": "重置"
   },
   "calculator": {
     "title": "经验值计算器",
