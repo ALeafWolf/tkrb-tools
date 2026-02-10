@@ -38,7 +38,9 @@
     "cannotDowngrade": "極から特への計算はできません（ダウングレードは不可能）",
     "kiwameTypeMustMatch": "現在と目標の状態の極タイプは同じである必要があります",
     "failedToLoadExpData": "経験値データの読み込みに失敗しました",
-    "calculationFailed": "計算に失敗しました"
+    "calculationFailed": "計算に失敗しました",
+    "invalidInput": "ハイライトされたフィールドを修正してください",
+    "enterValidLevel": "有効なレベルを入力してください"
   },
   "results": {
     "expNeededDelta": "必要な経験値（差分）：",

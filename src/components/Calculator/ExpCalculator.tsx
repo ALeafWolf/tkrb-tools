@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToukenState, ToukenType, ExpData } from "../../lib/types/touken";
 import {
@@ -19,12 +19,47 @@ const TOUKEN_TYPES: ToukenType[] = [
   "yari",
   "naginata",
 ];
+
+interface StateRadioGroupProps {
+  value: ToukenState;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  t: (key: string) => string;
+}
+
+const StateRadioGroup = ({ value, onChange, t }: StateRadioGroupProps) => (
+  <div className="flex gap-4">
+    <label className="flex items-center">
+      <input
+        type="radio"
+        value="toku"
+        checked={value === "toku"}
+        onChange={onChange}
+        className="mr-2"
+      />
+      <span>{t("states.toku")}</span>
+    </label>
+    <label className="flex items-center">
+      <input
+        type="radio"
+        value="kiwame"
+        checked={value === "kiwame"}
+        onChange={onChange}
+        className="mr-2"
+      />
+      <span>{t("states.kiwame")}</span>
+    </label>
+  </div>
+);
+
 export default function ExpCalculator() {
   const { t, i18n } = useTranslation();
 
-  const formatNumber = (num: number): string => {
-    return new Intl.NumberFormat(i18n.language).format(num);
-  };
+  const formatNumber = useCallback(
+    (num: number): string => {
+      return new Intl.NumberFormat(i18n.language).format(num);
+    },
+    [i18n.language]
+  );
 
   const [expData, setExpData] = useState<ExpData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -32,16 +67,24 @@ export default function ExpCalculator() {
 
   const [currentState, setCurrentState] = useState<ToukenState>("toku");
   const [currentType, setCurrentType] = useState<ToukenType | null>(null);
-  const [currentLevel, setCurrentLevel] = useState<number>(1);
+  const [currentLevel, setCurrentLevel] = useState<number | "">(1);
 
   const [targetState, setTargetState] = useState<ToukenState>("kiwame");
   const [targetType, setTargetType] = useState<ToukenType | null>(null);
-  const [targetLevel, setTargetLevel] = useState<number>(1);
+  const [targetLevel, setTargetLevel] = useState<number | "">(1);
 
   const [result, setResult] = useState<{
     value: number;
     kind: "delta" | "requiredStoredCumulative";
   } | null>(null);
+
+  const [validationErrors, setValidationErrors] = useState<{
+    currentLevel?: boolean;
+    targetLevel?: boolean;
+    currentType?: boolean;
+    targetType?: boolean;
+    messages?: Array<{ key: string; params?: Record<string, string | number> }>;
+  }>({});
 
   // Load exp.json on mount
   useEffect(() => {
@@ -65,50 +108,81 @@ export default function ExpCalculator() {
     }
 
     loadExpData();
-  }, [t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // Reset type when state changes
-  useEffect(() => {
-    if (currentState === "toku") {
-      setCurrentType(null);
-    } else if (!currentType) {
-      setCurrentType("tantou");
+
+  function validateInputs(): {
+    isValid: boolean;
+    errors: {
+      currentLevel?: boolean;
+      targetLevel?: boolean;
+      currentType?: boolean;
+      targetType?: boolean;
+      messages: Array<{ key: string; params?: Record<string, string | number> }>;
+    };
+  } {
+    const errors: {
+      currentLevel?: boolean;
+      targetLevel?: boolean;
+      currentType?: boolean;
+      targetType?: boolean;
+      messages: Array<{ key: string; params?: Record<string, string | number> }>;
+    } = {
+      messages: [],
+    };
+
+    if (!expData) {
+      errors.messages.push({ key: "errors.expDataNotLoaded" });
+      return { isValid: false, errors };
     }
-  }, [currentState, currentType]);
-
-  useEffect(() => {
-    if (targetState === "toku") {
-      setTargetType(null);
-    } else if (!targetType) {
-      setTargetType("tantou");
-    }
-  }, [targetState, targetType]);
-
-  function validateInputs(): string | null {
-    if (!expData) return t("errors.expDataNotLoaded");
 
     if (currentState === "kiwame" && !currentType) {
-      return t("errors.selectTypeCurrentKiwame");
+      errors.currentType = true;
+      errors.messages.push({ key: "errors.selectTypeCurrentKiwame" });
     }
 
     if (targetState === "kiwame" && !targetType) {
-      return t("errors.selectTypeTargetKiwame");
+      errors.targetType = true;
+      errors.messages.push({ key: "errors.selectTypeTargetKiwame" });
     }
 
     const currentMaxLevel = currentState === "toku" ? 99 : 199;
     const targetMaxLevel = targetState === "toku" ? 99 : 199;
 
-    if (currentLevel < 1 || currentLevel > currentMaxLevel) {
-      return t("errors.currentLevelRange", { max: currentMaxLevel });
+    // Check current level - allow empty string during typing
+    if (currentLevel === "" || typeof currentLevel !== "number") {
+      errors.currentLevel = true;
+      errors.messages.push({
+        key: "errors.currentLevelRange",
+        params: { max: currentMaxLevel },
+      });
+    } else if (currentLevel < 1 || currentLevel > currentMaxLevel) {
+      errors.currentLevel = true;
+      errors.messages.push({
+        key: "errors.currentLevelRange",
+        params: { max: currentMaxLevel },
+      });
     }
 
-    if (targetLevel < 1 || targetLevel > targetMaxLevel) {
-      return t("errors.targetLevelRange", { max: targetMaxLevel });
+    // Check target level - allow empty string during typing
+    if (targetLevel === "" || typeof targetLevel !== "number") {
+      errors.targetLevel = true;
+      errors.messages.push({
+        key: "errors.targetLevelRange",
+        params: { max: targetMaxLevel },
+      });
+    } else if (targetLevel < 1 || targetLevel > targetMaxLevel) {
+      errors.targetLevel = true;
+      errors.messages.push({
+        key: "errors.targetLevelRange",
+        params: { max: targetMaxLevel },
+      });
     }
 
     // Check for invalid state transitions
     if (currentState === "kiwame" && targetState === "toku") {
-      return t("errors.cannotDowngrade");
+      errors.messages.push({ key: "errors.cannotDowngrade" });
     }
 
     // If both states are kiwame, types should match
@@ -117,21 +191,33 @@ export default function ExpCalculator() {
       targetState === "kiwame" &&
       currentType !== targetType
     ) {
-      return t("errors.kiwameTypeMustMatch");
+      errors.messages.push({ key: "errors.kiwameTypeMustMatch" });
     }
 
-    return null;
+    return {
+      isValid: errors.messages.length === 0,
+      errors,
+    };
   }
 
   function handleCalculate() {
-    const validationError = validateInputs();
-    if (validationError) {
-      setError(validationError);
+    const validation = validateInputs();
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
       setResult(null);
+      setError(null);
       return;
     }
 
+    // Clear validation errors if validation passes
+    setValidationErrors({});
+
     if (!expData) return;
+
+    // Ensure levels are numbers (not empty strings) before calculation
+    const currentLevelNum =
+      typeof currentLevel === "number" ? currentLevel : 1;
+    const targetLevelNum = typeof targetLevel === "number" ? targetLevel : 1;
 
     try {
       setError(null);
@@ -145,16 +231,16 @@ export default function ExpCalculator() {
           value = getExpBetweenLevels(
             expData,
             "toku",
-            currentLevel,
-            targetLevel,
+            currentLevelNum,
+            targetLevelNum,
           );
         } else {
           // kiwame to kiwame (types should match, use currentType)
           value = getExpBetweenLevels(
             expData,
             "kiwame",
-            currentLevel,
-            targetLevel,
+            currentLevelNum,
+            targetLevelNum,
             currentType || undefined,
           );
         }
@@ -165,7 +251,7 @@ export default function ExpCalculator() {
         const expFromKiwameLv1ToTarget = getCumExpToLevel(
           expData,
           "kiwame",
-          targetLevel,
+          targetLevelNum,
           targetType || undefined,
         );
 
@@ -189,7 +275,77 @@ export default function ExpCalculator() {
     }
   }
 
-  const isCalculateDisabled = loading || !expData || validateInputs() !== null;
+  // Memoize options arrays to prevent recreation on every render
+  // Only include placeholder option when no type is selected
+  const currentTypeOptions = useMemo(
+    () => [
+      ...(currentType === null ? [{ value: "", label: t("common.selectType") }] : []),
+      ...TOUKEN_TYPES.map((type) => ({
+        value: type,
+        label: t(`types.${type}`),
+      })),
+    ],
+    [currentType, t]
+  );
+
+  const targetTypeOptions = useMemo(
+    () => [
+      ...(targetType === null ? [{ value: "", label: t("common.selectType") }] : []),
+      ...TOUKEN_TYPES.map((type) => ({
+        value: type,
+        label: t(`types.${type}`),
+      })),
+    ],
+    [targetType, t]
+  );
+
+  // Create reusable level change handler
+  const createLevelChangeHandler = useCallback(
+    (setter: (value: number | "") => void) =>
+      (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = e.target.value;
+        if (val === "") {
+          setter("");
+        } else {
+          const num = parseInt(val);
+          setter(isNaN(num) ? "" : num);
+        }
+        // Clear validation errors when user starts typing
+        if (validationErrors.messages && validationErrors.messages.length > 0) {
+          setValidationErrors({});
+        }
+      },
+    [validationErrors.messages]
+  );
+
+  // Handlers for state changes with type reset logic
+  const handleCurrentStateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newState = e.target.value as ToukenState;
+      setCurrentState(newState);
+      if (newState === "toku") {
+        setCurrentType(null);
+      } else if (!currentType) {
+        setCurrentType("tantou");
+      }
+    },
+    [currentType]
+  );
+
+  const handleTargetStateChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newState = e.target.value as ToukenState;
+      setTargetState(newState);
+      if (newState === "toku") {
+        setTargetType(null);
+      } else if (!targetType) {
+        setTargetType("tantou");
+      }
+    },
+    [targetType]
+  );
+
+  const isCalculateDisabled = loading || !expData;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -210,165 +366,149 @@ export default function ExpCalculator() {
       )}
 
       {!loading && expData && (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Current State Section */}
-          <ContentContainer className="space-y-4">
-            <h3 className="mb-4 text-xl font-semibold">
-              {t("calculator.currentState")}
-            </h3>
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Current State Section */}
+            <ContentContainer className="space-y-4">
+              <h3 className="mb-4 text-xl font-semibold">
+                {t("calculator.currentState")}
+              </h3>
 
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  {t("calculator.state")}
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="toku"
-                      checked={currentState === "toku"}
-                      onChange={(e) =>
-                        setCurrentState(e.target.value as ToukenState)
-                      }
-                      className="mr-2"
-                    />
-                    <span>{t("states.toku")}</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    {t("calculator.state")}
                   </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="kiwame"
-                      checked={currentState === "kiwame"}
-                      onChange={(e) =>
-                        setCurrentState(e.target.value as ToukenState)
+                  <StateRadioGroup
+                    value={currentState}
+                    onChange={handleCurrentStateChange}
+                    t={t}
+                  />
+                </div>
+
+                {currentState === "kiwame" && (
+                  <Select
+                    label={t("calculator.type")}
+                    value={currentType || ""}
+                    options={currentTypeOptions}
+                    onChange={(value) => {
+                      setCurrentType(value === "" ? null : (value as ToukenType));
+                      // Clear validation errors when user selects a type
+                      if (validationErrors.currentType) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          currentType: false,
+                          messages: prev.messages?.filter(
+                            (msg) => msg.key !== "errors.selectTypeCurrentKiwame"
+                          ),
+                        }));
                       }
-                      className="mr-2"
-                    />
-                    <span>{t("states.kiwame")}</span>
+                    }}
+                    placeholder={t("common.selectType")}
+                    className="w-full"
+                    hasError={validationErrors.currentType}
+                  />
+                )}
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    {t("calculator.level")} (1-
+                    {currentState === "toku" ? 99 : 199})
                   </label>
+                  <input
+                    type="number"
+                    max={currentState === "toku" ? 99 : 199}
+                    value={currentLevel}
+                    onChange={createLevelChangeHandler(setCurrentLevel)}
+                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                      validationErrors.currentLevel
+                        ? "border-red-500"
+                        : "border-black"
+                    }`}
+                  />
                 </div>
               </div>
+            </ContentContainer>
 
-              {currentState === "kiwame" && (
-                <Select
-                  label={t("calculator.type")}
-                  value={currentType || ""}
-                  options={[
-                    { value: "", label: t("common.selectType") },
-                    ...TOUKEN_TYPES.map((type) => ({
-                      value: type,
-                      label: t(`types.${type}`),
-                    })),
-                  ]}
-                  onChange={(value) =>
-                    setCurrentType(value === "" ? null : (value as ToukenType))
-                  }
-                  placeholder={t("common.selectType")}
-                  className="w-full"
-                />
-              )}
+            {/* Target State Section */}
+            <ContentContainer className="space-y-4">
+              <h3 className="mb-4 text-xl font-semibold">
+                {t("calculator.targetState")}
+              </h3>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  {t("calculator.level")} (1-
-                  {currentState === "toku" ? 99 : 199})
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={currentState === "toku" ? 99 : 199}
-                  value={currentLevel}
-                  onChange={(e) =>
-                    setCurrentLevel(parseInt(e.target.value) || 1)
-                  }
-                  className="w-full border border-black px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          </ContentContainer>
-
-          {/* Target State Section */}
-          <ContentContainer className="space-y-4">
-            <h3 className="mb-4 text-xl font-semibold">
-              {t("calculator.targetState")}
-            </h3>
-
-            <div className="space-y-4">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  {t("calculator.state")}
-                </label>
-                <div className="flex gap-4">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="toku"
-                      checked={targetState === "toku"}
-                      onChange={(e) =>
-                        setTargetState(e.target.value as ToukenState)
-                      }
-                      className="mr-2"
-                    />
-                    <span>{t("states.toku")}</span>
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    {t("calculator.state")}
                   </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      value="kiwame"
-                      checked={targetState === "kiwame"}
-                      onChange={(e) =>
-                        setTargetState(e.target.value as ToukenState)
+                  <StateRadioGroup
+                    value={targetState}
+                    onChange={handleTargetStateChange}
+                    t={t}
+                  />
+                </div>
+
+                {targetState === "kiwame" && (
+                  <Select
+                    label={t("calculator.type")}
+                    value={targetType || ""}
+                    options={targetTypeOptions}
+                    onChange={(value) => {
+                      setTargetType(value === "" ? null : (value as ToukenType));
+                      // Clear validation errors when user selects a type
+                      if (validationErrors.targetType) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          targetType: false,
+                          messages: prev.messages?.filter(
+                            (msg) => msg.key !== "errors.selectTypeTargetKiwame"
+                          ),
+                        }));
                       }
-                      className="mr-2"
-                    />
-                    <span>{t("states.kiwame")}</span>
+                    }}
+                    placeholder={t("common.selectType")}
+                    className="w-full"
+                    hasError={validationErrors.targetType}
+                  />
+                )}
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-gray-700">
+                    {t("calculator.level")} (1-{targetState === "toku" ? 99 : 199}
+                    )
                   </label>
+                  <input
+                    type="number"
+                    max={targetState === "toku" ? 99 : 199}
+                    value={targetLevel}
+                    onChange={createLevelChangeHandler(setTargetLevel)}
+                    className={`w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                      validationErrors.targetLevel
+                        ? "border-red-500"
+                        : "border-black"
+                    }`}
+                  />
                 </div>
               </div>
-
-              {targetState === "kiwame" && (
-                <Select
-                  label={t("calculator.type")}
-                  value={targetType || ""}
-                  options={[
-                    { value: "", label: t("common.selectType") },
-                    ...TOUKEN_TYPES.map((type) => ({
-                      value: type,
-                      label: t(`types.${type}`),
-                    })),
-                  ]}
-                  onChange={(value) =>
-                    setTargetType(value === "" ? null : (value as ToukenType))
-                  }
-                  placeholder={t("common.selectType")}
-                  className="w-full"
-                />
-              )}
-
-              <div>
-                <label className="mb-2 block text-sm font-medium text-gray-700">
-                  {t("calculator.level")} (1-{targetState === "toku" ? 99 : 199}
-                  )
-                </label>
-                <input
-                  type="number"
-                  min={1}
-                  max={targetState === "toku" ? 99 : 199}
-                  value={targetLevel}
-                  onChange={(e) =>
-                    setTargetLevel(parseInt(e.target.value) || 1)
-                  }
-                  className="w-full border border-black px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                />
-              </div>
-            </div>
-          </ContentContainer>
-
+            </ContentContainer>
+          </div>
           {/* Calculate Button */}
           <div className="col-span-2 flex rounded-lg gap-4">
             <ContentContainer className="col-span-2 rounded-lg border flex-1">
-              {result && (
+              {validationErrors.messages && validationErrors.messages.length > 0 ? (
+                <>
+                  <h3 className="text-xl font-semibold text-red-600 mb-3">
+                    {t("errors.invalidInput")}
+                  </h3>
+                  <div className="space-y-2">
+                    {validationErrors.messages.map((message, index) => (
+                      <div key={index} className="text-red-600">
+                        {t(message.key, message.params)}
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : result ? (
                 <>
                   <h3 className="text-xl font-semibold">
                     {t("calculator.calculationResults")}
@@ -387,7 +527,7 @@ export default function ExpCalculator() {
                     </div>
                   </div>
                 </>
-              )}
+              ) : null}
             </ContentContainer>
             <Button
               onClick={handleCalculate}

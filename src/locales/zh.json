@@ -38,7 +38,9 @@
     "cannotDowngrade": "无法从極计算到特（无法降级）",
     "kiwameTypeMustMatch": "当前和目标状态的極类型必须相同",
     "failedToLoadExpData": "加载经验值数据失败",
-    "calculationFailed": "计算失败"
+    "calculationFailed": "计算失败",
+    "invalidInput": "请更正高亮显示的字段",
+    "enterValidLevel": "请输入有效的等级"
   },
   "results": {
     "expNeededDelta": "所需经验值（差值）：",

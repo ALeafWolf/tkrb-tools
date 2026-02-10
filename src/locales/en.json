@@ -38,7 +38,9 @@
     "cannotDowngrade": "Cannot calculate from kiwame to toku (downgrade not possible)",
     "kiwameTypeMustMatch": "Kiwame type must be the same for current and target state",
     "failedToLoadExpData": "Failed to load exp data",
-    "calculationFailed": "Calculation failed"
+    "calculationFailed": "Calculation failed",
+    "invalidInput": "Please correct the highlighted fields",
+    "enterValidLevel": "Please enter a valid level"
   },
   "results": {
     "expNeededDelta": "EXP needed (delta):",

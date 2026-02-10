@@ -12,6 +12,7 @@ type SelectProps = {
     disabled?: boolean;
     className?: string;
     placeholder?: string; // shows when value is empty
+    hasError?: boolean;
 };
 
 export function Select({
@@ -23,6 +24,7 @@ export function Select({
     disabled = false,
     className = "",
     placeholder,
+    hasError = false,
 }: SelectProps) {
     const uid = React.useId();
     const baseId = id ?? `select-${uid}`;
@@ -135,9 +137,10 @@ export function Select({
                 type="button"
                 disabled={disabled}
                 className={cn(
-                    "relative w-full inline-flex items-center justify-between px-3 py-2 border border-black bg-transparent",
+                    "relative w-full inline-flex items-center justify-between px-3 py-2 border bg-transparent",
                     "focus:outline-none",
                     disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
+                    hasError ? "border-red-500" : "border-black",
                 )}
                 role="combobox"
                 aria-haspopup="listbox"
