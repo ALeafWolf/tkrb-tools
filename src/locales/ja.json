@@ -7,6 +7,11 @@
     "language": "言語",
     "reset": "リセット"
   },
+  "welcome": {
+    "title": "ようこそ",
+    "subtitle": "上のタブからツールを選んでください。",
+    "navLabel": "計算機へのリンク"
+  },
   "calculator": {
     "title": "経験値計算機",
     "currentState": "現在の状態",
@@ -46,6 +51,36 @@
   "results": {
     "expNeededDelta": "必要な経験値（差分）：",
     "requiredStoredCumulative": "必要な累積経験値（修行前）："
+  },
+  "limitedSmithing": {
+    "title": "限時鍛刀",
+    "pityCap": "顕現ポイント",
+    "currentScore": "当前積分",
+    "ofuda": "御札",
+    "ofudaUme": "梅",
+    "ofudaTake": "竹",
+    "ofudaMatsu": "松",
+    "ofudaFuji": "富士",
+    "currentResources": "所持資源",
+    "charcoal": "木炭",
+    "steel": "玉鋼",
+    "coolant": "冷却材",
+    "whetstone": "砥石",
+    "calculationResults": "計算結果",
+    "pityPathLabel": "保底ルート",
+    "ticketPathLabel": "御札ルート",
+    "forgesNeeded": "必要回数",
+    "totalResources": "必要資源",
+    "resource": "資源",
+    "pityPathGap": "保底資源差",
+    "ticketPathGap": "御札資源差",
+    "errors": {
+      "pityCapPositive": "顕現ポイントは0より大きい値を入力してください",
+      "currentScoreNonNegative": "当前積分を入力してください",
+      "currentScoreBelowPity": "当前積分は顕現ポイント未満にしてください",
+      "ofudaNonNegative": "御札の数は0以上にしてください",
+      "resourcesNonNegative": "資源は0以上にしてください"
+    }
   },
   "language": {
     "zh": "中文",

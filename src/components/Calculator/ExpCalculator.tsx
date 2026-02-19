@@ -20,6 +20,74 @@ const TOUKEN_TYPES: ToukenType[] = [
   "naginata",
 ];
 
+const STORAGE_KEY = "expCalculator";
+
+type StoredInputs = {
+  currentState: ToukenState;
+  targetState: ToukenState;
+  toukenType: ToukenType | null;
+  currentLevel: number;
+  targetLevel: number;
+};
+
+const DEFAULT_INPUTS: StoredInputs = {
+  currentState: "toku",
+  targetState: "kiwame",
+  toukenType: null,
+  currentLevel: 1,
+  targetLevel: 1,
+};
+
+function isToukenState(value: unknown): value is ToukenState {
+  return value === "toku" || value === "kiwame";
+}
+
+function isToukenType(value: unknown): value is ToukenType {
+  return typeof value === "string" && TOUKEN_TYPES.includes(value as ToukenType);
+}
+
+function loadStoredInputs(): StoredInputs {
+  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
+    return DEFAULT_INPUTS;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULT_INPUTS;
+
+    const parsed = JSON.parse(raw) as Partial<StoredInputs> | null;
+    if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
+
+    const next: StoredInputs = { ...DEFAULT_INPUTS };
+
+    if (isToukenState(parsed.currentState)) {
+      next.currentState = parsed.currentState;
+    }
+
+    if (isToukenState(parsed.targetState)) {
+      next.targetState = parsed.targetState;
+    }
+
+    if (parsed.toukenType == null) {
+      next.toukenType = null;
+    } else if (isToukenType(parsed.toukenType)) {
+      next.toukenType = parsed.toukenType;
+    }
+
+    if (typeof parsed.currentLevel === "number" && Number.isFinite(parsed.currentLevel) && parsed.currentLevel >= 1) {
+      next.currentLevel = parsed.currentLevel;
+    }
+
+    if (typeof parsed.targetLevel === "number" && Number.isFinite(parsed.targetLevel) && parsed.targetLevel >= 1) {
+      next.targetLevel = parsed.targetLevel;
+    }
+
+    return next;
+  } catch {
+    return DEFAULT_INPUTS;
+  }
+}
+
 interface StateRadioGroupProps {
   value: ToukenState;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -65,12 +133,24 @@ export default function ExpCalculator() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [currentState, setCurrentState] = useState<ToukenState>("toku");
-  const [toukenType, setToukenType] = useState<ToukenType | null>(null);
-  const [currentLevel, setCurrentLevel] = useState<number | "">(1);
+  const initialInputs = useMemo(() => loadStoredInputs(), []);
 
-  const [targetState, setTargetState] = useState<ToukenState>("kiwame");
-  const [targetLevel, setTargetLevel] = useState<number | "">(1);
+  const [currentState, setCurrentState] = useState<ToukenState>(
+    () => initialInputs.currentState,
+  );
+  const [toukenType, setToukenType] = useState<ToukenType | null>(
+    () => initialInputs.toukenType,
+  );
+  const [currentLevel, setCurrentLevel] = useState<number | "">(
+    () => initialInputs.currentLevel,
+  );
+
+  const [targetState, setTargetState] = useState<ToukenState>(
+    () => initialInputs.targetState,
+  );
+  const [targetLevel, setTargetLevel] = useState<number | "">(
+    () => initialInputs.targetLevel,
+  );
 
   const [result, setResult] = useState<{
     value: number;
@@ -108,6 +188,31 @@ export default function ExpCalculator() {
     loadExpData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Persist user inputs to localStorage
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
+      return;
+    }
+
+    if (typeof currentLevel !== "number" || typeof targetLevel !== "number") {
+      return;
+    }
+
+    const data: StoredInputs = {
+      currentState,
+      targetState,
+      toukenType,
+      currentLevel,
+      targetLevel,
+    };
+
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch {
+      // ignore write errors
+    }
+  }, [currentState, targetState, toukenType, currentLevel, targetLevel]);
 
 
   function validateInputs(): {
@@ -266,6 +371,9 @@ export default function ExpCalculator() {
     setResult(null);
     setValidationErrors({});
     setError(null);
+    if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
+      window.localStorage.removeItem(STORAGE_KEY);
+    }
   }
 
   // Memoize options arrays to prevent recreation on every render

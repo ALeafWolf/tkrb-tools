@@ -7,6 +7,11 @@
     "language": "语言",
     "reset": "重置"
   },
+  "welcome": {
+    "title": "欢迎",
+    "subtitle": "请在上方选择一个工具开始使用。",
+    "navLabel": "计算器链接"
+  },
   "calculator": {
     "title": "经验值计算器",
     "currentState": "当前状态",
@@ -46,6 +51,36 @@
   "results": {
     "expNeededDelta": "所需经验值（差值）：",
     "requiredStoredCumulative": "所需累积经验值（修行前）："
+  },
+  "limitedSmithing": {
+    "title": "限锻计算器",
+    "pityCap": "显现点数",
+    "currentScore": "当前积分",
+    "ofuda": "御札",
+    "ofudaUme": "梅",
+    "ofudaTake": "竹",
+    "ofudaMatsu": "松",
+    "ofudaFuji": "富士",
+    "currentResources": "现有资源",
+    "charcoal": "木炭",
+    "steel": "玉钢",
+    "coolant": "冷却材",
+    "whetstone": "砥石",
+    "calculationResults": "计算结果",
+    "pityPathLabel": "保底路径",
+    "ticketPathLabel": "御札路径",
+    "forgesNeeded": "所需次数",
+    "totalResources": "所需资源",
+    "resource": "资源",
+    "pityPathGap": "保底资源差",
+    "ticketPathGap": "御札资源差",
+    "errors": {
+      "pityCapPositive": "显现点数上限必须大于 0",
+      "currentScoreNonNegative": "请输入当前积分",
+      "currentScoreBelowPity": "当前积分必须小于显现点数上限",
+      "ofudaNonNegative": "御札数量不能为负",
+      "resourcesNonNegative": "资源数量不能为负"
+    }
   },
   "language": {
     "zh": "中文",

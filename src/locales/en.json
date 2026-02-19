@@ -7,6 +7,11 @@
     "language": "Language",
     "reset": "Reset"
   },
+  "welcome": {
+    "title": "Welcome",
+    "subtitle": "Choose a tool above to get started.",
+    "navLabel": "Calculator links"
+  },
   "calculator": {
     "title": "EXP Calculator",
     "currentState": "Current State",
@@ -46,6 +51,36 @@
   "results": {
     "expNeededDelta": "EXP needed (delta):",
     "requiredStoredCumulative": "Required stored cumulative EXP (before training):"
+  },
+  "limitedSmithing": {
+    "title": "Limited-Time Smithing",
+    "pityCap": "Manifestation Points",
+    "currentScore": "Current Score",
+    "ofuda": "Ofuda",
+    "ofudaUme": "Ume (梅)",
+    "ofudaTake": "Take (竹)",
+    "ofudaMatsu": "Matsu (松)",
+    "ofudaFuji": "Fuji (富士)",
+    "currentResources": "Current resources",
+    "charcoal": "Charcoal",
+    "steel": "Steel",
+    "coolant": "Coolant",
+    "whetstone": "Whetstone",
+    "calculationResults": "Calculation Results",
+    "pityPathLabel": "Bare pity path",
+    "ticketPathLabel": "Ofuda path",
+    "forgesNeeded": "Forges needed",
+    "totalResources": "Total resources",
+    "resource": "Resource",
+    "pityPathGap": "Pity path gap",
+    "ticketPathGap": "Ofuda path gap",
+    "errors": {
+      "pityCapPositive": "Manifestation points cap must be greater than 0",
+      "currentScoreNonNegative": "Current score is required",
+      "currentScoreBelowPity": "Current score must be less than manifestation points cap",
+      "ofudaNonNegative": "Ofuda counts must be 0 or more",
+      "resourcesNonNegative": "Resource amounts must be 0 or more"
+    }
   },
   "language": {
     "zh": "中文",
