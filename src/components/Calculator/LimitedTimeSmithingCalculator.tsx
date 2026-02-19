@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocalStorageObject } from "../../lib/hooks";
 import { Button } from "../Shared/Button";
 import { ContentContainer } from "../Shared/ContentContainer";
 
@@ -48,28 +49,19 @@ function parseNum(value: unknown): number | null {
   return null;
 }
 
-function loadStoredInputs(): StoredInputs {
-  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
-    return DEFAULT_INPUTS;
+function parseStoredInputs(raw: unknown): StoredInputs {
+  const parsed = raw as Partial<StoredInputs> | null;
+  if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
+  const next = { ...DEFAULT_INPUTS };
+  const keys = Object.keys(DEFAULT_INPUTS) as (keyof StoredInputs)[];
+  for (const key of keys) {
+    const v = parseNum(parsed[key]);
+    if (v !== null) next[key] = v;
   }
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_INPUTS;
-    const parsed = JSON.parse(raw) as Partial<StoredInputs> | null;
-    if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
-    const next = { ...DEFAULT_INPUTS };
-    const keys = Object.keys(DEFAULT_INPUTS) as (keyof StoredInputs)[];
-    for (const key of keys) {
-      const v = parseNum(parsed[key]);
-      if (v !== null) next[key] = v;
-    }
-    if (typeof parsed.pityCap === "number" && parsed.pityCap > 0) {
-      next.pityCap = parsed.pityCap;
-    }
-    return next;
-  } catch {
-    return DEFAULT_INPUTS;
+  if (typeof parsed.pityCap === "number" && parsed.pityCap > 0) {
+    next.pityCap = parsed.pityCap;
   }
+  return next;
 }
 
 type ResultState = {
@@ -100,7 +92,11 @@ export default function LimitedTimeSmithingCalculator() {
     [i18n.language]
   );
 
-  const initialInputs = useMemo(() => loadStoredInputs(), []);
+  const { initialValue: initialInputs, save, remove } = useLocalStorageObject(
+    STORAGE_KEY,
+    DEFAULT_INPUTS,
+    parseStoredInputs,
+  );
 
   const [pityCap, setPityCap] = useState<number | "">(() => initialInputs.pityCap);
   const [currentScore, setCurrentScore] = useState<number | "">(() => initialInputs.currentScore);
@@ -119,9 +115,8 @@ export default function LimitedTimeSmithingCalculator() {
   }>({ messages: [] });
 
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.localStorage === "undefined") return;
     const num = (v: number | ""): number => (typeof v === "number" ? v : 0);
-    const data: StoredInputs = {
+    save({
       pityCap: num(pityCap) || DEFAULT_INPUTS.pityCap,
       currentScore: num(currentScore),
       umeCount: num(umeCount),
@@ -132,13 +127,9 @@ export default function LimitedTimeSmithingCalculator() {
       steel: num(steel),
       coolant: num(coolant),
       whetstone: num(whetstone),
-    };
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // ignore
-    }
+    });
   }, [
+    save,
     pityCap,
     currentScore,
     umeCount,
@@ -243,13 +234,7 @@ export default function LimitedTimeSmithingCalculator() {
     setWhetstone(DEFAULT_INPUTS.whetstone);
     setResult(null);
     setValidationErrors({ messages: [] });
-    try {
-      if (typeof window !== "undefined" && window.localStorage) {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-    } catch {
-      // ignore
-    }
+    remove();
   }
 
   const createNumberHandler = useCallback(
@@ -261,11 +246,11 @@ export default function LimitedTimeSmithingCalculator() {
         const num = parseInt(val, 10);
         setter(Number.isNaN(num) ? "" : num);
       }
-      if (validationErrors.messages.length > 0) {
-        setValidationErrors({ messages: [] });
-      }
+      setValidationErrors((prev) =>
+        prev.messages.length > 0 ? { messages: [] } : prev,
+      );
     },
-    [validationErrors.messages.length]
+    [],
   );
 
   const inputClass =

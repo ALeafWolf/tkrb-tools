@@ -1,0 +1,1 @@
+export { useLocalStorageObject } from "./useLocalStorageObject";

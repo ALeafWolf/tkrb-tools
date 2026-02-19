@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { useTranslation } from "react-i18next";
 import type { ToukenState, ToukenType, ExpData } from "../../lib/types/touken";
 import {
   getExpBetweenLevels,
   getCumExpToLevel,
 } from "../../lib/helpers";
+import { useLocalStorageObject } from "../../lib/hooks";
 import { Button } from "../Shared/Button";
 import { ContentContainer } from "../Shared/ContentContainer";
 import { Select } from "../Shared/Select";
@@ -46,46 +47,35 @@ function isToukenType(value: unknown): value is ToukenType {
   return typeof value === "string" && TOUKEN_TYPES.includes(value as ToukenType);
 }
 
-function loadStoredInputs(): StoredInputs {
-  if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
-    return DEFAULT_INPUTS;
+function parseStoredInputs(raw: unknown): StoredInputs {
+  const parsed = raw as Partial<StoredInputs> | null;
+  if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
+
+  const next: StoredInputs = { ...DEFAULT_INPUTS };
+
+  if (isToukenState(parsed.currentState)) {
+    next.currentState = parsed.currentState;
   }
 
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_INPUTS;
-
-    const parsed = JSON.parse(raw) as Partial<StoredInputs> | null;
-    if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
-
-    const next: StoredInputs = { ...DEFAULT_INPUTS };
-
-    if (isToukenState(parsed.currentState)) {
-      next.currentState = parsed.currentState;
-    }
-
-    if (isToukenState(parsed.targetState)) {
-      next.targetState = parsed.targetState;
-    }
-
-    if (parsed.toukenType == null) {
-      next.toukenType = null;
-    } else if (isToukenType(parsed.toukenType)) {
-      next.toukenType = parsed.toukenType;
-    }
-
-    if (typeof parsed.currentLevel === "number" && Number.isFinite(parsed.currentLevel) && parsed.currentLevel >= 1) {
-      next.currentLevel = parsed.currentLevel;
-    }
-
-    if (typeof parsed.targetLevel === "number" && Number.isFinite(parsed.targetLevel) && parsed.targetLevel >= 1) {
-      next.targetLevel = parsed.targetLevel;
-    }
-
-    return next;
-  } catch {
-    return DEFAULT_INPUTS;
+  if (isToukenState(parsed.targetState)) {
+    next.targetState = parsed.targetState;
   }
+
+  if (parsed.toukenType == null) {
+    next.toukenType = null;
+  } else if (isToukenType(parsed.toukenType)) {
+    next.toukenType = parsed.toukenType;
+  }
+
+  if (typeof parsed.currentLevel === "number" && Number.isFinite(parsed.currentLevel) && parsed.currentLevel >= 1) {
+    next.currentLevel = parsed.currentLevel;
+  }
+
+  if (typeof parsed.targetLevel === "number" && Number.isFinite(parsed.targetLevel) && parsed.targetLevel >= 1) {
+    next.targetLevel = parsed.targetLevel;
+  }
+
+  return next;
 }
 
 interface StateRadioGroupProps {
@@ -94,30 +84,36 @@ interface StateRadioGroupProps {
   t: (key: string) => string;
 }
 
-const StateRadioGroup = ({ value, onChange, t }: StateRadioGroupProps) => (
-  <div className="flex gap-4">
-    <label className="flex items-center">
-      <input
-        type="radio"
-        value="toku"
-        checked={value === "toku"}
-        onChange={onChange}
-        className="mr-2"
-      />
-      <span>{t("states.toku")}</span>
-    </label>
-    <label className="flex items-center">
-      <input
-        type="radio"
-        value="kiwame"
-        checked={value === "kiwame"}
-        onChange={onChange}
-        className="mr-2"
-      />
-      <span>{t("states.kiwame")}</span>
-    </label>
-  </div>
-);
+const StateRadioGroup = memo(function StateRadioGroup({
+  value,
+  onChange,
+  t,
+}: StateRadioGroupProps) {
+  return (
+    <div className="flex gap-4">
+      <label className="flex items-center">
+        <input
+          type="radio"
+          value="toku"
+          checked={value === "toku"}
+          onChange={onChange}
+          className="mr-2"
+        />
+        <span>{t("states.toku")}</span>
+      </label>
+      <label className="flex items-center">
+        <input
+          type="radio"
+          value="kiwame"
+          checked={value === "kiwame"}
+          onChange={onChange}
+          className="mr-2"
+        />
+        <span>{t("states.kiwame")}</span>
+      </label>
+    </div>
+  );
+});
 
 export default function ExpCalculator() {
   const { t, i18n } = useTranslation();
@@ -133,7 +129,11 @@ export default function ExpCalculator() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const initialInputs = useMemo(() => loadStoredInputs(), []);
+  const { initialValue: initialInputs, save, remove } = useLocalStorageObject(
+    STORAGE_KEY,
+    DEFAULT_INPUTS,
+    parseStoredInputs,
+  );
 
   const [currentState, setCurrentState] = useState<ToukenState>(
     () => initialInputs.currentState,
@@ -191,28 +191,17 @@ export default function ExpCalculator() {
 
   // Persist user inputs to localStorage
   useEffect(() => {
-    if (typeof window === "undefined" || typeof window.localStorage === "undefined") {
-      return;
-    }
-
     if (typeof currentLevel !== "number" || typeof targetLevel !== "number") {
       return;
     }
-
-    const data: StoredInputs = {
+    save({
       currentState,
       targetState,
       toukenType,
       currentLevel,
       targetLevel,
-    };
-
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch {
-      // ignore write errors
-    }
-  }, [currentState, targetState, toukenType, currentLevel, targetLevel]);
+    });
+  }, [save, currentState, targetState, toukenType, currentLevel, targetLevel]);
 
 
   function validateInputs(): {
@@ -371,9 +360,7 @@ export default function ExpCalculator() {
     setResult(null);
     setValidationErrors({});
     setError(null);
-    if (typeof window !== "undefined" && typeof window.localStorage !== "undefined") {
-      window.localStorage.removeItem(STORAGE_KEY);
-    }
+    remove();
   }
 
   // Memoize options arrays to prevent recreation on every render
@@ -401,11 +388,11 @@ export default function ExpCalculator() {
           setter(isNaN(num) ? "" : num);
         }
         // Clear validation errors when user starts typing
-        if (validationErrors.messages && validationErrors.messages.length > 0) {
-          setValidationErrors({});
-        }
+        setValidationErrors((prev) =>
+          prev.messages && prev.messages.length > 0 ? {} : prev,
+        );
       },
-    [validationErrors.messages]
+    [],
   );
 
   // Handlers for state changes with type reset logic
