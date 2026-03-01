@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocalStorageObject } from "../../lib/hooks";
 import { Button } from "../Shared/Button";
@@ -42,6 +42,7 @@ const DEFAULT_INPUTS: StoredInputs = {
   whetstone: 0,
 };
 
+/** Returns the value if it is a finite non-negative number, otherwise null. */
 function parseNum(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
     return value;
@@ -49,6 +50,11 @@ function parseNum(value: unknown): number | null {
   return null;
 }
 
+/**
+ * Validates and normalises a raw localStorage value into a StoredInputs object.
+ * Any field that is missing, non-finite, or negative falls back to DEFAULT_INPUTS.
+ * pityCap must additionally be positive; a zero value also falls back to the default.
+ */
 function parseStoredInputs(raw: unknown): StoredInputs {
   const parsed = raw as Partial<StoredInputs> | null;
   if (!parsed || typeof parsed !== "object") return DEFAULT_INPUTS;
@@ -85,12 +91,9 @@ const RESOURCE_KEYS = ["charcoal", "steel", "coolant", "whetstone"] as const;
 export default function LimitedTimeSmithingCalculator() {
   const { t, i18n } = useTranslation();
 
-  const formatNumber = useCallback(
-    (num: number): string => {
-      return new Intl.NumberFormat(i18n.language).format(num);
-    },
-    [i18n.language]
-  );
+  function formatNumber(num: number): string {
+    return new Intl.NumberFormat(i18n.language).format(num);
+  }
 
   const { initialValue: initialInputs, save, remove } = useLocalStorageObject(
     STORAGE_KEY,
@@ -114,7 +117,12 @@ export default function LimitedTimeSmithingCalculator() {
     messages: Array<{ key: string; params?: Record<string, string | number> }>;
   }>({ messages: [] });
 
-  useEffect(() => {
+  /**
+   * Persists current input state to localStorage.
+   * `overrides` should carry the field that was just changed, since the
+   * corresponding setState call hasn't committed to React state yet at call time.
+   */
+  function saveCurrentState(overrides: Partial<StoredInputs> = {}) {
     const num = (v: number | ""): number => (typeof v === "number" ? v : 0);
     save({
       pityCap: num(pityCap) || DEFAULT_INPUTS.pityCap,
@@ -127,21 +135,17 @@ export default function LimitedTimeSmithingCalculator() {
       steel: num(steel),
       coolant: num(coolant),
       whetstone: num(whetstone),
+      ...overrides,
     });
-  }, [
-    save,
-    pityCap,
-    currentScore,
-    umeCount,
-    takeCount,
-    matsuCount,
-    fujiCount,
-    charcoal,
-    steel,
-    coolant,
-    whetstone,
-  ]);
+  }
 
+  /**
+   * Checks all inputs for logical correctness:
+   * - pityCap must be positive
+   * - currentScore must be non-negative and strictly less than pityCap
+   * - all ofuda counts and resource amounts must be non-negative
+   * Returns isValid=false and a list of i18n message keys when any rule is violated.
+   */
   function validate(): {
     isValid: boolean;
     messages: Array<{ key: string; params?: Record<string, string | number> }>;
@@ -168,6 +172,13 @@ export default function LimitedTimeSmithingCalculator() {
     return { isValid: messages.length === 0, messages };
   }
 
+  /**
+   * Runs validation and, if successful, computes two forging strategies:
+   * - Pity path: forge every smithing until the pity cap is reached, ignoring ofuda tickets.
+   * - Ticket path: spend all held ofuda first (each grants bonus score points), then
+   *   forge only as many times as the remaining score gap requires.
+   * For each path the total resource cost and the shortfall/surplus per material are stored.
+   */
   function handleCalculate() {
     const { isValid, messages } = validate();
     if (!isValid) {
@@ -221,6 +232,7 @@ export default function LimitedTimeSmithingCalculator() {
     });
   }
 
+  /** Resets all inputs to their defaults, clears results and validation errors, and removes the localStorage entry. */
   function handleReset() {
     setPityCap(DEFAULT_INPUTS.pityCap);
     setCurrentScore(DEFAULT_INPUTS.currentScore);
@@ -237,21 +249,22 @@ export default function LimitedTimeSmithingCalculator() {
     remove();
   }
 
-  const createNumberHandler = useCallback(
-    (setter: (v: number | "") => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * Returns an onChange handler for a numeric input.
+   * Empty string is kept as-is so the field can be cleared; any non-integer input
+   * is treated as empty. Persists to localStorage and clears stale validation errors on each change.
+   */
+  function createNumberHandler(field: keyof StoredInputs, setter: (v: number | "") => void) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
       const val = e.target.value;
-      if (val === "") {
-        setter("");
-      } else {
-        const num = parseInt(val, 10);
-        setter(Number.isNaN(num) ? "" : num);
-      }
+      const numericValue: number | "" = val === "" || Number.isNaN(parseInt(val, 10)) ? "" : parseInt(val, 10);
+      setter(numericValue);
+      saveCurrentState({ [field]: typeof numericValue === "number" ? numericValue : 0 });
       setValidationErrors((prev) =>
         prev.messages.length > 0 ? { messages: [] } : prev,
       );
-    },
-    [],
-  );
+    };
+  }
 
   const inputClass =
     "w-full border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none border-black";
@@ -273,7 +286,7 @@ export default function LimitedTimeSmithingCalculator() {
                 type="number"
                 min={1}
                 value={pityCap}
-                onChange={createNumberHandler(setPityCap)}
+                onChange={createNumberHandler("pityCap", setPityCap)}
                 className={inputClass}
               />
             </div>
@@ -285,7 +298,7 @@ export default function LimitedTimeSmithingCalculator() {
                 type="number"
                 min={0}
                 value={currentScore}
-                onChange={createNumberHandler(setCurrentScore)}
+                onChange={createNumberHandler("currentScore", setCurrentScore)}
                 className={inputClass}
               />
             </div>
@@ -304,7 +317,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={umeCount}
-                  onChange={createNumberHandler(setUmeCount)}
+                  onChange={createNumberHandler("umeCount", setUmeCount)}
                   className={inputClass}
                 />
               </div>
@@ -316,7 +329,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={takeCount}
-                  onChange={createNumberHandler(setTakeCount)}
+                  onChange={createNumberHandler("takeCount", setTakeCount)}
                   className={inputClass}
                 />
               </div>
@@ -328,7 +341,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={matsuCount}
-                  onChange={createNumberHandler(setMatsuCount)}
+                  onChange={createNumberHandler("matsuCount", setMatsuCount)}
                   className={inputClass}
                 />
               </div>
@@ -340,7 +353,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={fujiCount}
-                  onChange={createNumberHandler(setFujiCount)}
+                  onChange={createNumberHandler("fujiCount", setFujiCount)}
                   className={inputClass}
                 />
               </div>
@@ -360,7 +373,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={charcoal}
-                  onChange={createNumberHandler(setCharcoal)}
+                  onChange={createNumberHandler("charcoal", setCharcoal)}
                   className={inputClass}
                 />
               </div>
@@ -372,7 +385,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={steel}
-                  onChange={createNumberHandler(setSteel)}
+                  onChange={createNumberHandler("steel", setSteel)}
                   className={inputClass}
                 />
               </div>
@@ -384,7 +397,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={coolant}
-                  onChange={createNumberHandler(setCoolant)}
+                  onChange={createNumberHandler("coolant", setCoolant)}
                   className={inputClass}
                 />
               </div>
@@ -396,7 +409,7 @@ export default function LimitedTimeSmithingCalculator() {
                   type="number"
                   min={0}
                   value={whetstone}
-                  onChange={createNumberHandler(setWhetstone)}
+                  onChange={createNumberHandler("whetstone", setWhetstone)}
                   className={inputClass}
                 />
               </div>
