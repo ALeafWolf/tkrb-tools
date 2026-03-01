@@ -118,12 +118,9 @@ const StateRadioGroup = memo(function StateRadioGroup({
 export default function ExpCalculator() {
   const { t, i18n } = useTranslation();
 
-  const formatNumber = useCallback(
-    (num: number): string => {
-      return new Intl.NumberFormat(i18n.language).format(num);
-    },
-    [i18n.language]
-  );
+  function formatNumber(num: number): string {
+    return new Intl.NumberFormat(i18n.language).format(num);
+  }
 
   const [expData, setExpData] = useState<ExpData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -376,24 +373,20 @@ export default function ExpCalculator() {
     [toukenType, t]
   );
 
-  // Create reusable level change handler
-  const createLevelChangeHandler = useCallback(
-    (setter: (value: number | "") => void) =>
-      (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        if (val === "") {
-          setter("");
-        } else {
-          const num = parseInt(val);
-          setter(isNaN(num) ? "" : num);
-        }
-        // Clear validation errors when user starts typing
-        setValidationErrors((prev) =>
-          prev.messages && prev.messages.length > 0 ? {} : prev,
-        );
-      },
-    [],
-  );
+  function createLevelChangeHandler(setter: (value: number | "") => void) {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const val = e.target.value;
+      if (val === "") {
+        setter("");
+      } else {
+        const num = parseInt(val);
+        setter(isNaN(num) ? "" : num);
+      }
+      setValidationErrors((prev) =>
+        prev.messages && prev.messages.length > 0 ? {} : prev,
+      );
+    };
+  }
 
   // Handlers for state changes with type reset logic
   const handleCurrentStateChange = useCallback(
